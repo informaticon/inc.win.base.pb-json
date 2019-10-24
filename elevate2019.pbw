@@ -6,5 +6,5 @@ Save Format v3.0(19990112)
  3 "application_step3.pbt";
  4 "application_step4.pbt";
 @end;
-DefaultTarget "application_step4.pbt";
-DefaultRemoteTarget "application_step4.pbt";
+DefaultTarget "application_oldschool.pbt";
+DefaultRemoteTarget "application_oldschool.pbt";
