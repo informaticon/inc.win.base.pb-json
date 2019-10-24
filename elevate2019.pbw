@@ -1,0 +1,10 @@
+Save Format v3.0(19990112)
+@begin Targets
+ 0 "application_oldschool.pbt";
+ 1 "application_step1.pbt";
+ 2 "application_step2.pbt";
+ 3 "application_step3.pbt";
+ 4 "application_step4.pbt";
+@end;
+DefaultTarget "application_step4.pbt";
+DefaultRemoteTarget "application_step4.pbt";
