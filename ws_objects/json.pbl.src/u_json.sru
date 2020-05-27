@@ -81,19 +81,19 @@ created:			2019-10-14
 author:			georg.brodbeck@informaticon.com
 */
 
-string ls_ret
-exception lu_exception
+string ls_json
+integer li_file
 
-ijp_parser = create jsonparser
-
-ls_ret = ijp_parser.loadfile(as_path)
-if len(ls_ret) > 0 then
-	lu_exception = create exception
-	lu_exception.setmessage(ls_ret)
-	throw lu_exception
+li_file = fileopen(as_path, textmode!, read!, shared!)
+if li_file > 0 then
+	if filereadex(li_file, ls_json) < 0 then
+		throw of_get_exception('Error reading the file')
+	end if
+else
+	throw of_get_exception('Error opening file to read')
 end if
 
-of_init_jsonparser()
+of_load_string(ls_json)
 end subroutine
 
 private function exception of_get_exception (string as_message);/** private
@@ -133,11 +133,17 @@ created:			2019-10-14
 author:			georg.brodbeck@informaticon.com
 */
 
-if of_get_type() <> jsonbooleanitem! then
-	throw of_get_exception('you can only get a boolean from a boolean node')
-end if
+boolean lbo_null
 
-return ibo_value
+choose case of_get_type()
+	case jsonnullitem!
+		setnull(lbo_null)
+		return lbo_null
+	case jsonbooleanitem!
+		return ibo_value
+	case else
+		throw of_get_exception('you can only get a boolean from a boolean node')
+end choose
 end function
 
 public function date of_get_value_date () throws exception;/**
@@ -149,11 +155,7 @@ created:			2019-10-14
 author:			georg.brodbeck@informaticon.com
 */
 
-if of_get_type() <> jsonstringitem! then
-	throw of_get_exception('you can only get a date from a string node')
-end if
-
-return date(is_value)
+return date(of_get_value_string())
 end function
 
 public function datetime of_get_value_datetime () throws exception;/**
@@ -165,11 +167,7 @@ created:			2019-10-14
 author:			georg.brodbeck@informaticon.com
 */
 
-if of_get_type() <> jsonstringitem! then
-	throw of_get_exception('you can only get a datetime from a string node')
-end if
-
-return datetime(is_value)
+return datetime(of_get_value_string())
 end function
 
 public function double of_get_value_number () throws exception;/**
@@ -180,11 +178,17 @@ created:			2019-10-14
 author:			georg.brodbeck@informaticon.com
 */
 
-if of_get_type() <> jsonnumberitem! then
-	throw of_get_exception('you can only get a number from a number node')
-end if
+double ldo_null
 
-return ido_value
+choose case of_get_type()
+	case jsonnullitem!
+		setnull(ldo_null)
+		return ldo_null
+	case jsonnumberitem!
+		return ido_value
+	case else
+		throw of_get_exception('you can only get a number from a number node')
+end choose
 end function
 
 public function string of_get_value_string () throws exception;/**
@@ -195,11 +199,17 @@ created:			2019-10-14
 author:			georg.brodbeck@informaticon.com
 */
 
-if of_get_type() <> jsonstringitem! then
-	throw of_get_exception('you can only get a string from a string node')
-end if
+string ls_null
 
-return is_value
+choose case of_get_type()
+	case jsonnullitem!
+		setnull(ls_null)
+		return ls_null
+	case jsonstringitem!
+		return is_value
+	case else
+		throw of_get_exception('you can only get a string from a string node')
+end choose
 end function
 
 public function time of_get_value_time () throws exception;/**
@@ -211,11 +221,7 @@ created:			2019-10-14
 author:			georg.brodbeck@informaticon.com
 */
 
-if of_get_type() <> jsonstringitem! then
-	throw of_get_exception('you can only get a time from a string node')
-end if
-
-return time(is_value)
+return time(of_get_value_string())
 end function
 
 public function jsonitemtype of_get_type () throws exception;/**
@@ -302,7 +308,8 @@ author:			georg.brodbeck@informaticon.com
 long ll_i
 
 if of_get_type() <> jsonobjectitem! then
-	throw of_get_exception('you can only get a node by key in an object node')
+	// throw of_get_exception('you can only get a node by key in an object node')
+	return false
 end if
 
 for ll_i = 1 to upperbound(iu_nodes)
@@ -445,6 +452,9 @@ author:			georg.brodbeck@informaticon.com
 
 ibo_parsed = false
 ibo_generated = false
+
+// also set all parents to changed recursively
+if isvalid(iu_parent) then iu_parent.of_changed()
 end subroutine
 
 public function string of_get_json_string () throws exception;/**
@@ -468,13 +478,21 @@ created:			2019-10-14
 author:			georg.brodbeck@informaticon.com
 */
 
-if not ibo_generated then of_generate()
+string ls_json
+integer li_file
 
-if ijg_generator.savetofile(as_filename) = 1 then
-	// ok
+ls_json = of_get_json_string()
+
+li_file = fileopen(as_filename, linemode!, write!, lockwrite!, replace!)
+if li_file > 0 then
+	if filewriteex(li_file, ls_json) < 0 then
+		throw of_get_exception('Error writing the file')
+	end if
+	fileclose(li_file)
 else
-	throw of_get_exception('error saving json file')
+	throw of_get_exception('Error opening the file to write')
 end if
+
 end subroutine
 
 public function u_json of_get_parent () throws exception;/**
@@ -966,7 +984,7 @@ created:			2019-10-18
 author:			georg.brodbeck@informaticon.com
 */
 
-return '1.0.0'
+return '1.1.0'
 end function
 
 on u_json.create
