@@ -984,7 +984,7 @@ created:			2019-10-18
 author:			georg.brodbeck@informaticon.com
 */
 
-return '1.1.0'
+return '1.1.1'
 end function
 
 on u_json.create
