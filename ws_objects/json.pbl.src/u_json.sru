@@ -656,7 +656,7 @@ created:			2019-10-14
 author:			georg.brodbeck@informaticon.com
 */
 
-of_delete_node(of_get_node(as_key).of_get_key())
+of_delete_node(of_get_node(as_key).of_get_index())
 
 return this
 end function
