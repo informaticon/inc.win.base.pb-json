@@ -72,6 +72,9 @@ public function u_json of_set_value (double ado_value) throws exception
 public function u_json of_set_value (string as_value) throws exception
 public function u_json of_set_value_null () throws exception
 public function string of_get_version ()
+public function u_json of_set_value (date ada_value) throws exception
+public function u_json of_set_value (datetime adt_value) throws exception
+public function u_json of_set_value (time at_value) throws exception
 end prototypes
 
 public subroutine of_load_file (string as_path) throws exception;/**
@@ -871,6 +874,8 @@ public function u_json of_set_type (jsonitemtype ajit_type) throws exception;/**
 description:	set the type (jsonitemtype!) of the current node
 					usually, this isn't necessary, as the type is set automaticly
 					however, use this function, if you, for some reason, want to set the type manually
+					type can be changed between jsonstringitem, jsonnumberitem, jsonbooleanitem and jsonnullitem, but not between values and jsonobjectitem and/or jsonarrayitem
+					this function is automatically called when calling of_set_value()
 parameter:		jsonitemtype ajit_type:	type you want to set
 return:			u_json which represents the current position (self)
 created:			2019-10-14
@@ -881,7 +886,26 @@ if not ibo_type_defined then
 	ijit_type = ajit_type
 	ibo_type_defined = true
 else
-	throw of_get_exception('type is already defined')
+	if ijit_type = ajit_type then
+		// nothing to do
+	elseif (ijit_type = jsonobjectitem! or ijit_type = jsonarrayitem!) or (ajit_type = jsonobjectitem! or ajit_type = jsonarrayitem!) then
+		// type cannot be changed between value/object/array
+		throw of_get_exception('type is already defined and cannot be changed between values, object and/or arrays. delete and recreate the node if you want to do that')
+	else
+		// reset the value
+		choose case ijit_type
+			case jsonstringitem!
+				is_value = ''
+			case jsonnumberitem!
+				ido_value = 0
+			case jsonbooleanitem!
+				ibo_value = false
+		end choose
+		// change the type
+		ijit_type = ajit_type
+		
+		of_changed()
+	end if
 end if
 
 return this
@@ -903,7 +927,7 @@ ljit_type = jsonbooleanitem!
 
 if isnull(abo_value) then ljit_type = jsonnullitem!
 
-of_check_type(ljit_type, 'can~'t set a boolean value to a non-boolean node')
+of_set_type(ljit_type)
 
 if not isnull(abo_value) then ibo_value = abo_value
 
@@ -928,7 +952,7 @@ ljit_type = jsonnumberitem!
 
 if isnull(ado_value) then ljit_type = jsonnullitem!
 
-of_check_type(ljit_type, 'can~'t set a numeric value to a non-numeric node')
+of_set_type(ljit_type)
 
 if not isnull(ado_value) then ido_value = ado_value
 
@@ -953,7 +977,7 @@ ljit_type = jsonstringitem!
 
 if isnull(as_value) then ljit_type = jsonnullitem!
 
-of_check_type(ljit_type, 'can~'t set a string value to a non-string node')
+of_set_type(ljit_type)
 
 is_value = as_value
 
@@ -984,7 +1008,16 @@ created:			2019-10-18
 author:			georg.brodbeck@informaticon.com
 */
 
-return '1.1.1'
+return '1.2.0'
+end function
+
+public function u_json of_set_value (date ada_value) throws exception;return of_set_value(string(ada_value, 'yyyy-mm-dd'))
+end function
+
+public function u_json of_set_value (datetime adt_value) throws exception;return of_set_value(string(adt_value, 'yyyy-mm-dd hh:mm:ss'))
+end function
+
+public function u_json of_set_value (time at_value) throws exception;return of_set_value(string(at_value, 'hh:mm:ss'))
 end function
 
 on u_json.create
