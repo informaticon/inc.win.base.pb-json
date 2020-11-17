@@ -612,6 +612,9 @@ parameters:		long al_index:	the index of the node to be deleted
 return:			u_json which represents the current position (self)
 created:			2019-10-14
 author:			georg.brodbeck@informaticon.com
+edited:			2020-11-17
+author:			georg.brodbeck@informaticon.com
+description:	fixed bug with re-indexing, adding of_changed()
 */
 
 long ll_i, ll_index = 1
@@ -625,11 +628,13 @@ end if
 for ll_i = 1 to upperbound(iu_nodes)
 	if ll_i = al_index then continue
 	lu_nodes[ll_index] = iu_nodes[ll_i]
-	iu_nodes[ll_index].il_index = ll_index
+	lu_nodes[ll_index].il_index = ll_index
 	ll_index ++
 next
 
 iu_nodes = lu_nodes
+
+of_changed()
 
 return this
 end function
