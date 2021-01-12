@@ -92,6 +92,7 @@ if li_file > 0 then
 	if filereadex(li_file, ls_json) < 0 then
 		throw of_get_exception('Error reading the file')
 	end if
+	fileclose(li_file)
 else
 	throw of_get_exception('Error opening file to read')
 end if
