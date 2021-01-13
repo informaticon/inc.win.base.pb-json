@@ -89,10 +89,13 @@ integer li_file
 
 li_file = fileopen(as_path, textmode!, read!, shared!)
 if li_file > 0 then
-	if filereadex(li_file, ls_json) < 0 then
-		throw of_get_exception('Error reading the file')
-	end if
-	fileclose(li_file)
+	try
+		if filereadex(li_file, ls_json) < 0 then
+			throw of_get_exception('Error reading the file')
+		end if
+	finally
+		fileclose(li_file)
+	end try
 else
 	throw of_get_exception('Error opening file to read')
 end if
