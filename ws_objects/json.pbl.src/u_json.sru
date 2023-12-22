@@ -75,6 +75,7 @@ public function string of_get_version ()
 public function u_json of_set_value (date ada_value) throws exception
 public function u_json of_set_value (datetime adt_value) throws exception
 public function u_json of_set_value (time at_value) throws exception
+public function u_json of_set_value (datetime adt_value, string as_format) throws exception
 end prototypes
 
 public subroutine of_load_file (string as_path) throws exception;/**
@@ -82,6 +83,7 @@ description:	load a file and parse it
 parameters:		string as_path:	path where the json file will be found
 created:			2019-10-14
 author:			georg.brodbeck@informaticon.com
+2022-09-26:  Ramón San Félix Ramón add FileClose(li_file) rsrsystem.soft@gmail.com
 */
 
 string ls_json
@@ -89,18 +91,15 @@ integer li_file
 
 li_file = fileopen(as_path, textmode!, read!, shared!)
 if li_file > 0 then
-	try
-		if filereadex(li_file, ls_json) < 0 then
-			throw of_get_exception('Error reading the file')
-		end if
-	finally
-		fileclose(li_file)
-	end try
+	if filereadex(li_file, ls_json) < 0 then
+		throw of_get_exception('Error reading the file')
+	end if
 else
 	throw of_get_exception('Error opening file to read')
 end if
 
 of_load_string(ls_json)
+FileClose(li_file)
 end subroutine
 
 private function exception of_get_exception (string as_message);/** private
@@ -483,6 +482,7 @@ description:	generate the json (if not yet done) and write it to a file
 parameters:		string as_filename: path to the file which should be created
 created:			2019-10-14
 author:			georg.brodbeck@informaticon.com
+2022-09-26:  Ramón San Félix Ramón add encoding EncodingUTF8 rsrsystem.soft@gmail.com
 */
 
 string ls_json
@@ -490,7 +490,7 @@ integer li_file
 
 ls_json = of_get_json_string()
 
-li_file = fileopen(as_filename, linemode!, write!, lockwrite!, replace!)
+li_file = fileopen(as_filename, linemode!, write!, lockwrite!, replace!, EncodingUTF8!)
 if li_file > 0 then
 	if filewriteex(li_file, ls_json) < 0 then
 		throw of_get_exception('Error writing the file')
@@ -1027,6 +1027,17 @@ public function u_json of_set_value (datetime adt_value) throws exception;return
 end function
 
 public function u_json of_set_value (time at_value) throws exception;return of_set_value(string(at_value, 'hh:mm:ss'))
+end function
+
+public function u_json of_set_value (datetime adt_value, string as_format) throws exception;/**
+description:		Set Datetime value with a specific format
+parameters:		DateTime adt_value: Value to set
+					String as_format: specific format
+created:			2022-09-26
+author:			Ramón San Félix Ramón: rsrsystem.soft@gmail.com
+*/
+
+return of_set_value(string(adt_value, as_format))
 end function
 
 on u_json.create
